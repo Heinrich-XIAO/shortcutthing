@@ -85,6 +85,7 @@ document.addEventListener('keydown', function (event) {
                 if (visibleLabels.length === 1) {
                     console.log('Only one element left:', visibleLabels[0]);
                     visibleLabels[0].style.display = 'none';
+                    document.removeEventListener('keydown', filterLabels);
                     elements.forEach(element => {
                         if (element.dataset.labelBoxId === typedKeys) {
                             element.style.removeProperty('border');
@@ -105,30 +106,82 @@ document.addEventListener('keydown', function (event) {
                             shortcutInput.style.textAlign = 'center';
                             document.body.appendChild(shortcutInput);
                             shortcutInput.focus();
-                            
+
                             let isShortcut = true;
+
+                            let isModifiers = {
+                                isControl: false,
+                                isShift: false,
+                                isAlt: false,
+                                isMeta: false,
+                            };
+
+                            let shortcut = '';
 
                             document.addEventListener('keydown', function handleShortcutInput(event) {
                                 if (!isShortcut) return;
                                 event.preventDefault();
-                                console.log('Key pressed:', event.key);
                                 if (event.key === 'Escape') {
-                                    shortcutInput.removeEventListener('keydown', handleShortcutInput);
-                                    isShortcut = false;
+                                    if (['', 'CONTROL', 'SHIFT', 'META', 'ALT'].includes(shortcut)) {
+                                        alert('Shortcut not complete.')
+                                        return;
+                                    }
+                                    document.removeEventListener('keydown', handleShortcutInput);
+                                    chrome.storage.local.get({ shortcuts: [] }, (data) => {
+                                        const existingShortcut = data.shortcuts.find(s => 
+                                            s.domain === window.location.hostname && 
+                                            s.shortcut === shortcut &&
+                                            s.isModifiers.isControl === isModifiers.isControl &&
+                                            s.isModifiers.isShift === isModifiers.isShift &&
+                                            s.isModifiers.isAlt === isModifiers.isAlt &&
+                                            s.isModifiers.isMeta === isModifiers.isMeta
+                                        );
+
+                                        if (existingShortcut) {
+                                            const modifiers = [];
+                                            if (existingShortcut.isModifiers.isControl) modifiers.push('Ctrl');
+                                            if (existingShortcut.isModifiers.isShift) modifiers.push('Shift');
+                                            if (existingShortcut.isModifiers.isAlt) modifiers.push('Alt');
+                                            if (existingShortcut.isModifiers.isMeta) modifiers.push('Meta');
+                                            const modifiersText = modifiers.length > 0 ? modifiers.join('+') + '+' : '';
+                                            const replace = confirm(`A shortcut for "${modifiersText}${shortcut}" already exists for this domain. Do you want to replace it?`);
+                                            if (!replace) {
+                                                alert('Shortcut creation canceled.');
+                                                document.body.removeChild(shortcutInput);
+                                                return;
+                                            }
+                                            // Remove the existing shortcut
+                                            data.shortcuts = data.shortcuts.filter(s => s !== existingShortcut);
+                                            hasSearched = false;
+                                        }
+
+                                        const newShortcut = {
+                                            domain: window.location.hostname,
+                                            isModifiers,
+                                            shortcut
+                                        };
+                                        const updatedShortcuts = [...data.shortcuts, newShortcut];
+                                        chrome.storage.local.set({ shortcuts: updatedShortcuts }, () => {
+                                            console.log('Shortcut added:', newShortcut);
+                                            console.log('Updated shortcuts list:', updatedShortcuts);
+                                        });
+                                    });
                                     document.body.removeChild(shortcutInput);
+                                    hasSearched = false;
                                 } else {
-                                    const isControl = event.ctrlKey;
-                                    const isShift = event.shiftKey;
-                                    const isAlt = event.altKey;
-                                    const isMeta = event.metaKey;
-                                    const shortcut = event.key.toUpperCase();
+                                    isModifiers = {
+                                        isControl: event.ctrlKey,
+                                        isShift: event.shiftKey,
+                                        isAlt: event.altKey,
+                                        isMeta: event.metaKey,
+                                    };
+                                    shortcut = event.key.toUpperCase();
+
                                     const modifiers = [];
-                                    if (isControl) modifiers.push('Ctrl');
-                                    if (isShift) modifiers.push('Shift');
-                                    if (isAlt) modifiers.push('Alt');
-                                    if (isMeta) modifiers.push('Meta');
-                                    const shortcutKey = modifiers.length > 0 ? `${modifiers.join('+')}+${shortcut}` : shortcut;
-                                    console.log('Shortcut:', shortcutKey);
+                                    if (isModifiers.isControl) modifiers.push('Ctrl');
+                                    if (isModifiers.isShift) modifiers.push('Shift');
+                                    if (isModifiers.isAlt) modifiers.push('Alt');
+                                    if (isModifiers.isMeta) modifiers.push('Meta');
                                     shortcutInput.innerHTML = '<p>Type the shortcut you want to assign to this button. Press Escape to confirm.</p>';
                                     modifiers.map(modifier => {
                                         const modifierKBD = document.createElement('kbd');

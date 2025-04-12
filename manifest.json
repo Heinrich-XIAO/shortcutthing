@@ -5,7 +5,8 @@
   "description": "A Chrome extension that generates random strings and allows users to select buttons using keyboard shortcuts.",
   "permissions": [
     "scripting",
-    "activeTab"
+    "activeTab",
+    "storage"
   ],
   "background": {
     "service_worker": "src/background.js"
