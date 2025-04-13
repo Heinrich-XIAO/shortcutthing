@@ -1,16 +1,34 @@
 {
   "name": "shortcutthing",
-  "version": "1.0.0",
-  "description": "A Chrome extension that generates random strings and allows users to select buttons using keyboard shortcuts.",
-  "main": "Gruntfile.js",
+  "displayName": "Shortcutthing",
+  "version": "0.0.1",
+  "description": " ",
+  "author": " ",
   "scripts": {
-    "start": "grunt"
+    "dev": "plasmo dev",
+    "build": "plasmo build",
+    "package": "plasmo package"
+  },
+  "dependencies": {
+    "@plasmohq/storage": "^1.15.0",
+    "plasmo": "0.90.3",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "tailwindcss": "3.4.1"
   },
   "devDependencies": {
-    "grunt": "^1.6.1",
-    "grunt-contrib-clean": "^2.0.0",
-    "grunt-contrib-copy": "^1.0.0",
-    "grunt-contrib-watch": "^1.1.0",
-    "grunt-crx-auto-reload": "^1.0.2"
+    "@ianvs/prettier-plugin-sort-imports": "4.1.1",
+    "@types/chrome": "0.0.258",
+    "@types/node": "20.11.5",
+    "@types/react": "18.2.48",
+    "@types/react-dom": "18.2.18",
+    "postcss": "8.4.33",
+    "prettier": "3.2.4",
+    "typescript": "5.3.3"
+  },
+  "manifest": {
+    "host_permissions": [
+      "https://*/*"
+    ]
   }
 }
