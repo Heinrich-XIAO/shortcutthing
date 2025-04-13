@@ -34,10 +34,7 @@ document.addEventListener('keydown', function (event) {
             while (currentElement.parentElement) {
                 const tagName = currentElement.tagName.toLowerCase();
                 const id = currentElement.id ? `#${currentElement.id.trim()}` : ''; // Safely handle and trim id
-                const classes = currentElement.className && typeof currentElement.className === 'string' 
-                    ? `.${currentElement.className.trim().split(/\s+/).join('.')}` 
-                    : ''; // Safely handle, trim, and split className
-                ancestry.unshift(`${tagName}${id}${classes}`);
+                ancestry.unshift(`${tagName}${id}`); // Removed classes calculation
                 currentElement = currentElement.parentElement;
             }
             const uniqueIdentifier = ancestry.join(' > ');
@@ -73,7 +70,7 @@ document.addEventListener('keydown', function (event) {
 
             let shortcut = '';
 
-            document.addEventListener('keydown', function handleShortcutInput(event) {
+            document.addEventListener('keydown', async function handleShortcutInput(event) {
                 if (!isShortcut) return;
                 event.preventDefault();
                 if (event.key === 'Escape') {
@@ -82,7 +79,7 @@ document.addEventListener('keydown', function (event) {
                         return;
                     }
                     document.removeEventListener('keydown', handleShortcutInput);
-                    chrome.storage.local.get({ shortcuts: [] }, (data) => {
+                    chrome.storage.local.get({ shortcuts: [] }, async (data) => {
                         const existingShortcut = data.shortcuts.find(s =>
                             s.domain === window.location.hostname &&
                             s.shortcut === shortcut &&
@@ -99,16 +96,19 @@ document.addEventListener('keydown', function (event) {
                             if (existingShortcut.isModifiers.isAlt) modifiers.push('Alt');
                             if (existingShortcut.isModifiers.isMeta) modifiers.push('Meta');
                             const modifiersText = modifiers.length > 0 ? modifiers.join('+') + '+' : '';
-                            const replace = confirm(`A shortcut for "${modifiersText}${shortcut}" already exists for this domain. Do you want to replace it?`);
-                            if (!replace) {
+                            const response = await showConfirmDialog(`A shortcut for "${modifiersText}${shortcut}" already exists for this domain. Choose an action:`);
+                            if (response === "cancel") {
                                 alert('Shortcut creation canceled.');
                                 document.body.removeChild(shortcutInput);
                                 element.style.removeProperty('border');
                                 hasSearched = false;
                                 return;
+                            } else if (response === "replace") {
+                                // Remove the existing shortcut
+                                data.shortcuts = data.shortcuts.filter(s => s !== existingShortcut);
+                            } else if (response === "keep") {
+                                // Keep both: do nothing here to preserve the existing shortcut
                             }
-                            // Remove the existing shortcut
-                            data.shortcuts = data.shortcuts.filter(s => s !== existingShortcut);
                         }
 
                         const newShortcut = {
@@ -160,6 +160,33 @@ document.addEventListener('keydown', function (event) {
     }
 });
 
+// Modify the confirm dialog helper to include "Keep Both"
+function showConfirmDialog(message) {
+    return new Promise(resolve => {
+        const dialog = document.createElement('dialog');
+        dialog.innerHTML = `<p>${message}</p>
+<button id="replaceBtn">Replace</button>
+<button id="keepBothBtn">Keep Both</button>
+<button id="cancelBtn">Cancel</button>`;
+        document.body.appendChild(dialog);
+        dialog.showModal();
+        dialog.querySelector('#replaceBtn').addEventListener('click', () => {
+            resolve("replace");
+            dialog.close();
+            document.body.removeChild(dialog);
+        });
+        dialog.querySelector('#keepBothBtn').addEventListener('click', () => {
+            resolve("keep");
+            dialog.close();
+            document.body.removeChild(dialog);
+        });
+        dialog.querySelector('#cancelBtn').addEventListener('click', () => {
+            resolve("cancel");
+            dialog.close();
+            document.body.removeChild(dialog);
+        });
+    });
+}
 
 chrome.storage.local.get({ shortcuts: [] }, (data) => {
     const shortcuts = data.shortcuts;
@@ -173,7 +200,7 @@ chrome.storage.local.get({ shortcuts: [] }, (data) => {
         };
         const shortcut = event.key.toUpperCase();
 
-        const matchingShortcut = shortcuts.find(s =>
+        const matchingShortcuts = shortcuts.filter(s =>
             s.domain === window.location.hostname &&
             s.shortcut === shortcut &&
             s.isModifiers.isControl === isModifiers.isControl &&
@@ -181,23 +208,23 @@ chrome.storage.local.get({ shortcuts: [] }, (data) => {
             s.isModifiers.isAlt === isModifiers.isAlt &&
             s.isModifiers.isMeta === isModifiers.isMeta
         );
-
-        if (matchingShortcut) {
-            let targetElement = document.querySelector(matchingShortcut.uniqueIdentifier);
-            let isClickable = false;
-
-            // Search up the ancestral tree for a clickable element
-            while (targetElement) {
-                if (typeof targetElement.click === 'function') {
-                    isClickable = true;
-                    targetElement.click();
-                    break;
+        if (matchingShortcuts.length > 0) {
+            let clicked = false;
+            for (const matchingShortcut of matchingShortcuts) {
+                let targetElement = document.querySelector(matchingShortcut.uniqueIdentifier);
+                console.log('Target element:', targetElement);
+                while (targetElement) {
+                    if (typeof targetElement.click === 'function') {
+                        targetElement.click();
+                        clicked = true;
+                        break;
+                    }
+                    targetElement = targetElement.parentElement;
                 }
-                targetElement = targetElement.parentElement;
+                if (clicked) break;
             }
-
-            if (!isClickable) {
-                console.warn('No clickable target element found for shortcut:', matchingShortcut.uniqueIdentifier);
+            if (!clicked) {
+                console.warn('No clickable target element found for any matching shortcuts.');
             }
         }
     });
