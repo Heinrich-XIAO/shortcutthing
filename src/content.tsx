@@ -25,12 +25,27 @@ interface DialogProps {
 }
 
 const ConfirmDialog: React.FC<DialogProps> = ({ message, onClose }) => (
-  <dialog open className="plasmo-fixed plasmo-z-[10002] plasmo-p-4 plasmo-rounded">
-    <p>{message}</p>
+  <dialog open className="plasmo-fixed plasmo-z-[10002] plasmo-p-4 plasmo-rounded plasmo-bg-white plasmo-shadow-lg">
+    <p className="plasmo-text-lg plasmo-mb-4">{message}</p>
     <div className="plasmo-flex plasmo-gap-2 plasmo-mt-4">
-      <button onClick={() => onClose("replace")}>Replace</button>
-      <button onClick={() => onClose("keep")}>Keep Both</button>
-      <button onClick={() => onClose("cancel")}>Cancel</button>
+      <button 
+        onClick={() => onClose("replace")}
+        className="plasmo-bg-green-500 plasmo-border-none plasmo-text-white plasmo-py-2 plasmo-px-4 plasmo-text-center plasmo-no-underline plasmo-inline-block plasmo-text-base plasmo-m-1 plasmo-cursor-pointer plasmo-rounded hover:plasmo-bg-green-600"
+      >
+        Replace
+      </button>
+      <button 
+        onClick={() => onClose("keep")}
+        className="plasmo-bg-green-500 plasmo-border-none plasmo-text-white plasmo-py-2 plasmo-px-4 plasmo-text-center plasmo-no-underline plasmo-inline-block plasmo-text-base plasmo-m-1 plasmo-cursor-pointer plasmo-rounded hover:plasmo-bg-green-600"
+      >
+        Keep Both
+      </button>
+      <button 
+        onClick={() => onClose("cancel")}
+        className="plasmo-bg-gray-500 plasmo-border-none plasmo-text-white plasmo-py-2 plasmo-px-4 plasmo-text-center plasmo-no-underline plasmo-inline-block plasmo-text-base plasmo-m-1 plasmo-cursor-pointer plasmo-rounded hover:plasmo-bg-gray-600"
+      >
+        Cancel
+      </button>
     </div>
   </dialog>
 )
@@ -73,18 +88,18 @@ const ShortcutInput: React.FC<{
   }, [shortcut, modifiers])
 
   return (
-    <div className="plasmo-fixed plasmo-top-1/2 plasmo-left-1/2 plasmo-transform plasmo--translate-x-1/2 plasmo--translate-y-1/2 plasmo-z-[10001] plasmo-bg-white plasmo-p-4 plasmo-rounded plasmo-shadow-lg">
-      <p>Type the shortcut you want to assign to this button. Press Escape to confirm.</p>
-      <div className="plasmo-flex plasmo-gap-2 plasmo-mt-2">
+    <div className="plasmo-fixed plasmo-top-1/2 plasmo-left-1/2 plasmo-transform plasmo--translate-x-1/2 plasmo--translate-y-1/2 plasmo-z-[10001] plasmo-bg-white plasmo-p-8 plasmo-rounded-lg plasmo-shadow-lg plasmo-flex plasmo-flex-col plasmo-items-center plasmo-justify-center">
+      <p className="plasmo-text-lg plasmo-mb-4 plasmo-text-center">Type the shortcut you want to assign to this button. Press Escape to confirm.</p>
+      <div className="plasmo-flex plasmo-gap-2 plasmo-mt-4 plasmo-justify-center">
         {Object.entries(modifiers).map(([key, value]) => 
           value && (
-            <kbd key={key} className="plasmo-px-2 plasmo-py-1 plasmo-bg-gray-100 plasmo-rounded">
+            <kbd key={key} className="plasmo-px-2 plasmo-py-1 plasmo-bg-gray-100 plasmo-rounded plasmo-text-sm plasmo-font-mono">
               {key.replace("is", "")}
             </kbd>
           )
         )}
         {!["CONTROL", "SHIFT", "META", "ALT"].includes(shortcut) && shortcut && (
-          <kbd className="plasmo-px-2 plasmo-py-1 plasmo-bg-gray-100 plasmo-rounded">
+          <kbd className="plasmo-px-2 plasmo-py-1 plasmo-bg-gray-100 plasmo-rounded plasmo-text-sm plasmo-font-mono">
             {shortcut}
           </kbd>
         )}
@@ -256,7 +271,7 @@ const PlasmoContent = () => {
 
       if (matchingShortcuts.length > 0) {
         for (const matchingShortcut of matchingShortcuts) {
-          const targetElement = document.querySelector(matchingShortcut.uniqueIdentifier)
+          const targetElement = document.querySelector(matchingShortcut.uniqueIdentifier) as HTMLElement
           if (targetElement && typeof targetElement.click === "function") {
             targetElement.click()
             break
