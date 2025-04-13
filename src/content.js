@@ -188,44 +188,55 @@ function showConfirmDialog(message) {
     });
 }
 
+let shortcuts = [];
+
+chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace === 'local' && changes.shortcuts) {
+        shortcuts = changes.shortcuts.newValue;
+    }
+});
+
+// Initial load of shortcuts
 chrome.storage.local.get({ shortcuts: [] }, (data) => {
-    const shortcuts = data.shortcuts;
+    shortcuts = data.shortcuts;
+});
 
-    document.addEventListener('keydown', (event) => {
-        const isModifiers = {
-            isControl: event.ctrlKey,
-            isShift: event.shiftKey,
-            isAlt: event.altKey,
-            isMeta: event.metaKey,
-        };
-        const shortcut = event.key.toUpperCase();
+// Handle keyboard shortcuts
+document.addEventListener('keydown', (event) => {
+    const isModifiers = {
+        isControl: event.ctrlKey,
+        isShift: event.shiftKey,
+        isAlt: event.altKey,
+        isMeta: event.metaKey,
+    };
+    const shortcut = event.key.toUpperCase();
 
-        const matchingShortcuts = shortcuts.filter(s =>
-            s.domain === window.location.hostname &&
-            s.shortcut === shortcut &&
-            s.isModifiers.isControl === isModifiers.isControl &&
-            s.isModifiers.isShift === isModifiers.isShift &&
-            s.isModifiers.isAlt === isModifiers.isAlt &&
-            s.isModifiers.isMeta === isModifiers.isMeta
-        );
-        if (matchingShortcuts.length > 0) {
-            let clicked = false;
-            for (const matchingShortcut of matchingShortcuts) {
-                let targetElement = document.querySelector(matchingShortcut.uniqueIdentifier);
-                console.log('Target element:', targetElement);
-                while (targetElement) {
-                    if (typeof targetElement.click === 'function') {
-                        targetElement.click();
-                        clicked = true;
-                        break;
-                    }
-                    targetElement = targetElement.parentElement;
+    const matchingShortcuts = shortcuts.filter(s =>
+        s.domain === window.location.hostname &&
+        s.shortcut === shortcut &&
+        s.isModifiers.isControl === isModifiers.isControl &&
+        s.isModifiers.isShift === isModifiers.isShift &&
+        s.isModifiers.isAlt === isModifiers.isAlt &&
+        s.isModifiers.isMeta === isModifiers.isMeta
+    );
+
+    if (matchingShortcuts.length > 0) {
+        let clicked = false;
+        for (const matchingShortcut of matchingShortcuts) {
+            let targetElement = document.querySelector(matchingShortcut.uniqueIdentifier);
+            console.log('Target element:', targetElement);
+            while (targetElement) {
+                if (typeof targetElement.click === 'function') {
+                    targetElement.click();
+                    clicked = true;
+                    break;
                 }
-                if (clicked) break;
+                targetElement = targetElement.parentElement;
             }
-            if (!clicked) {
-                console.warn('No clickable target element found for any matching shortcuts.');
-            }
+            if (clicked) break;
         }
-    });
+        if (!clicked) {
+            console.warn('No clickable target element found for any matching shortcuts.');
+        }
+    }
 });
