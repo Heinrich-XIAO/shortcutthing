@@ -7,4 +7,13 @@
 #plasmo-shadow-container {
   all: initial;
   box-sizing: border-box;
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+}
+
+plasma-csui {
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
 }

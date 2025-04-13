@@ -88,23 +88,44 @@ const ShortcutInput: React.FC<{
   }, [shortcut, modifiers])
 
   return (
-    <div className="plasmo-fixed plasmo-top-1/2 plasmo-left-1/2 plasmo-transform plasmo--translate-x-1/2 plasmo--translate-y-1/2 plasmo-z-[10001] plasmo-bg-white plasmo-p-8 plasmo-rounded-lg plasmo-shadow-lg plasmo-flex plasmo-flex-col plasmo-items-center plasmo-justify-center">
-      <p className="plasmo-text-lg plasmo-mb-4 plasmo-text-center">Type the shortcut you want to assign to this button. Press Escape to confirm.</p>
-      <div className="plasmo-flex plasmo-gap-2 plasmo-mt-4 plasmo-justify-center">
-        {Object.entries(modifiers).map(([key, value]) => 
-          value && (
-            <kbd key={key} className="plasmo-px-2 plasmo-py-1 plasmo-bg-gray-100 plasmo-rounded plasmo-text-sm plasmo-font-mono">
-              {key.replace("is", "")}
+    <dialog
+      open
+      style={{
+        position: "fixed",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        zIndex: 10001,
+        backgroundColor: "white",
+        padding: "2rem",
+        borderRadius: "0.5rem",
+        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)"
+      }}
+    >
+      <div className="plasmo-flex plasmo-flex-col plasmo-items-center plasmo-justify-center">
+        <p className="plasmo-text-lg plasmo-mb-4 plasmo-text-center">
+          Type the shortcut you want to assign to this button. Press Escape to confirm.
+        </p>
+        <div className="plasmo-flex plasmo-gap-2 plasmo-mt-4 plasmo-justify-center">
+          {Object.entries(modifiers).map(
+            ([key, value]) =>
+              value && (
+                <kbd
+                  key={key}
+                  className="plasmo-px-2 plasmo-py-1 plasmo-bg-gray-100 plasmo-rounded plasmo-text-sm plasmo-font-mono"
+                >
+                  {key.replace("is", "")}
+                </kbd>
+              )
+          )}
+          {!["CONTROL", "SHIFT", "META", "ALT"].includes(shortcut) && shortcut && (
+            <kbd className="plasmo-px-2 plasmo-py-1 plasmo-bg-gray-100 plasmo-rounded plasmo-text-sm plasmo-font-mono">
+              {shortcut}
             </kbd>
-          )
-        )}
-        {!["CONTROL", "SHIFT", "META", "ALT"].includes(shortcut) && shortcut && (
-          <kbd className="plasmo-px-2 plasmo-py-1 plasmo-bg-gray-100 plasmo-rounded plasmo-text-sm plasmo-font-mono">
-            {shortcut}
-          </kbd>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+    </dialog>
   )
 }
 
