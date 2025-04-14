@@ -34,6 +34,9 @@
       "cookies"
     ],
     "key": "$CRX_PUBLIC_KEY",
-    "host_permissions": ["http://localhost/*", "$CLERK_FRONTEND_API/*"]
+    "host_permissions": [
+      "http://localhost/*",
+      "$CLERK_FRONTEND_API/*"
+    ]
   }
 }
