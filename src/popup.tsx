@@ -1,4 +1,3 @@
-import { CountButton } from "~features/count-button"
 import {
   ClerkProvider,
   SignInButton,
@@ -17,6 +16,9 @@ if (!PUBLISHABLE_KEY) {
 import "~style.css"
 
 function IndexPopup() {
+  if (chrome.extension.getViews({ type: 'popup' }).length > 0) {
+    window.open(chrome.runtime.getURL('popup.html'), '_blank')
+  }
   return (
     <ClerkProvider
       publishableKey={PUBLISHABLE_KEY}
@@ -24,8 +26,8 @@ function IndexPopup() {
       signInFallbackRedirectUrl={`${EXTENSION_URL}/popup.html`}
       signUpFallbackRedirectUrl={`${EXTENSION_URL}/popup.html`}
     >
-      <div className="plasmo-flex plasmo-items-center plasmo-justify-center plasmo-h-16 plasmo-w-40">
-        <header className="plasmo-w-full">
+      <div className="plasmo-flex">
+        <header className="plasmo-w-full plasmo-flex plasmo-justify-end plasmo-p-4 plasmo-h-4">
           <SignedOut>
             <SignInButton mode="modal" />
           </SignedOut>
@@ -33,7 +35,6 @@ function IndexPopup() {
             <UserButton />
           </SignedIn>
         </header>
-        <CountButton />
       </div>
     </ClerkProvider>
   )
