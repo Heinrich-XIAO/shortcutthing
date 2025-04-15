@@ -20,9 +20,22 @@ interface Shortcut {
 }
 
 interface WebSubURLShortcut {
+  uuid: string
   hrefRegex: string
   shortcuts: Shortcut[]
   scrollBoxIdentifier: string
+}
+
+const getShortcutsFromUUID = async (uuid: string): Promise<WebSubURLShortcut[]> => {
+  // fetch from https://shortcutthing.netlify.app/.netlify/functions/redisConnect with GET request and uuid as query parameter
+  const res = await fetch(`https://shortcutthing.netlify.app/.netlify/functions/redisConnect?uuid=${uuid}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
+  const body = await res.json();
+  return body.shortcut;
 }
 
 const PlasmoContent = () => {
@@ -31,15 +44,11 @@ const PlasmoContent = () => {
 
   useEffect(() => {
     const setDefaultShortcuts = async () => {
+      console.log("Setting default shortcuts");
       const existingShortcuts = await storage.get<WebSubURLShortcut[]>("shortcuts");
       if (!existingShortcuts || existingShortcuts.length === 0) {
-        const defaultShortcuts: WebSubURLShortcut[] = [
-          {
-            hrefRegex: "https:\\/\\/mail\\.google\\.com\\/mail\\/u\\/\\d+\\/.+",
-            shortcuts: [],
-            scrollBoxIdentifier: "div>div>table>tbody"
-          }
-        ];
+        const defaultUUID = "9f38ca3b-097b-4013-8423-7a8ba2e8a585";
+        const defaultShortcuts = await getShortcutsFromUUID(defaultUUID);
         await storage.set("shortcuts", defaultShortcuts);
       }
       const existingVimStyle = await storage.get<boolean>("vimStyle");
