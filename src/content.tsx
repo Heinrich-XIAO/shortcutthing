@@ -44,12 +44,11 @@ const PlasmoContent = () => {
 
   useEffect(() => {
     const setDefaultShortcuts = async () => {
-      console.log("Setting default shortcuts");
       const existingShortcuts = await storage.get<WebSubURLShortcut[]>("shortcuts");
       if (!existingShortcuts || existingShortcuts.length === 0) {
         const defaultUUID = "9f38ca3b-097b-4013-8423-7a8ba2e8a585";
         const defaultShortcuts = await getShortcutsFromUUID(defaultUUID);
-        await storage.set("shortcuts", defaultShortcuts);
+        await storage.set("shortcuts", [defaultShortcuts]);
       }
       const existingVimStyle = await storage.get<boolean>("vimStyle");
       if (existingVimStyle === undefined) {
@@ -58,6 +57,24 @@ const PlasmoContent = () => {
     };
 
     setDefaultShortcuts();
+  }, []);
+
+  // Sync shortcuts with server
+  useEffect(() => {
+    const syncShortcuts = async () => {
+      const shortcuts = await storage.get<WebSubURLShortcut[]>("shortcuts") || [];
+      const newShortcuts = [];
+      for (let i = 0; i < shortcuts.length; i++) {
+        const shortcut = shortcuts[i];
+        if (shortcut.uuid) {
+          const newShortcut = await getShortcutsFromUUID(shortcut.uuid);
+          newShortcuts.push(newShortcut);
+        }
+      }
+      await storage.set("shortcuts", newShortcuts);
+    };
+
+    syncShortcuts();
   }, []);
 
   // Handle shortcuts
@@ -75,11 +92,15 @@ const PlasmoContent = () => {
           e.preventDefault();
           if (!scrollItem) {
             setScrollItem(scrollBox.firstElementChild as HTMLElement);
+            (scrollBox.firstElementChild as HTMLElement).style.border = "2px solid #555";
+            scrollBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
           } else {
             const nextItem = e.key === "j" || e.key === "ArrowDown" ? scrollItem.nextElementSibling : scrollItem.previousElementSibling;
             if (nextItem) {
               setScrollItem(nextItem as HTMLElement);
-              nextItem.scrollIntoView({ behavior: "smooth", block: "nearest" });
+              nextItem.scrollIntoView({ behavior: "auto", block: "nearest" });
+              (nextItem as HTMLElement).style.border = "2px solid #555";
+              scrollItem.style.border = ""; // Reset border
             }
           }
         }
@@ -108,22 +129,8 @@ const PlasmoContent = () => {
     }
 
     document.addEventListener("keydown", handleKeyDown)
-    // return () => document.removeEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
   }, [scrollItem])
-
-  useEffect(() => {
-    if (scrollItem) {
-      // scrollItem.style.backgroundColor = "#333"; // Darker background
-      scrollItem.style.border = "2px solid #555"; // Border
-    }
-
-    return () => {
-      if (scrollItem) {
-        // scrollItem.style.backgroundColor = ""; // Reset background
-        scrollItem.style.border = ""; // Reset border
-      }
-    };
-  }, [scrollItem]);
 
   return null
 }
