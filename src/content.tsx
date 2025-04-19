@@ -90,7 +90,7 @@ const PlasmoContent = () => {
         const scrollBox = document.querySelector(scrollBoxIdentifier) as HTMLElement;
         if (scrollBox) {
           e.preventDefault();
-          if (!scrollItem) {
+          if (!scrollItem || !document.body.contains(scrollItem as Node)) {
             setScrollItem(scrollBox.firstElementChild as HTMLElement);
             (scrollBox.firstElementChild as HTMLElement).style.border = "2px solid #555";
             scrollBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
