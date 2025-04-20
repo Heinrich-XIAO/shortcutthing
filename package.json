@@ -32,7 +32,6 @@
     "permissions": [
       "storage",
       "activeTab"
-    ],
-    "host_permissions": []
+    ]
   }
 }

@@ -41,6 +41,7 @@ const getShortcutsFromUUID = async (uuid: string): Promise<WebSubURLShortcut[]> 
 const PlasmoContent = () => {
   const storage = new Storage()
   const [scrollItem, setScrollItem] = useState<HTMLElement | null>(null);
+  const [backupScrollItems, setBackupScrollItems] = useState<HTMLElement[]>([]);
 
   useEffect(() => {
     const setDefaultShortcuts = async () => {
@@ -79,6 +80,23 @@ const PlasmoContent = () => {
 
   // Handle shortcuts
   useEffect(() => {
+    const setBackupScrollItemsWithCurrent = (currentItem: HTMLElement | null) => { 
+      const backupScrollItems = [];
+      backupScrollItems.push(currentItem.nextElementSibling as HTMLElement);
+      backupScrollItems.push(currentItem.previousElementSibling as HTMLElement);
+      setBackupScrollItems(backupScrollItems);
+    }
+    const handleBackups = () => {
+      if (scrollItem && !document.body.contains(scrollItem as Node)) {
+        // set to the first element in backups that is in the document
+        const nextItem = backupScrollItems.find(item => document.body.contains(item as Node)) as HTMLElement;
+        setScrollItem(nextItem);
+        nextItem.style.border = "2px solid #555";
+        setBackupScrollItems(backupScrollItems.filter(item => document.body.contains(item as Node)));
+        setBackupScrollItemsWithCurrent(nextItem);
+        return;
+      }
+    }
     const handleKeyDown = async (e: KeyboardEvent) => {
       const shortcuts = await storage.get<WebSubURLShortcut[]>("shortcuts") || [];
       const isVimStyle = await storage.get<boolean>("vimStyle") || false;
@@ -90,12 +108,14 @@ const PlasmoContent = () => {
         const scrollBox = document.querySelector(scrollBoxIdentifier) as HTMLElement;
         if (scrollBox) {
           e.preventDefault();
+          let nextItem: HTMLElement | null = null;
           if (!scrollItem || !document.body.contains(scrollItem as Node)) {
-            setScrollItem(scrollBox.firstElementChild as HTMLElement);
-            (scrollBox.firstElementChild as HTMLElement).style.border = "2px solid #555";
+            nextItem = scrollBox.firstElementChild as HTMLElement;
+            setScrollItem(nextItem);
+            (nextItem).style.border = "2px solid #555";
             scrollBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
           } else {
-            const nextItem = e.key === "j" || e.key === "ArrowDown" ? scrollItem.nextElementSibling : scrollItem.previousElementSibling;
+            nextItem = e.key === "j" || e.key === "ArrowDown" ? scrollItem.nextElementSibling as HTMLElement : scrollItem.previousElementSibling as HTMLElement;
             if (nextItem) {
               setScrollItem(nextItem as HTMLElement);
               nextItem.scrollIntoView({ behavior: "auto", block: "nearest" });
@@ -103,13 +123,18 @@ const PlasmoContent = () => {
               scrollItem.style.border = ""; // Reset border
             }
           }
+          setBackupScrollItemsWithCurrent(nextItem);
         }
         return;
       }
 
-      currentURLShortcuts[0].shortcuts.forEach((shortcut) => {
+      currentURLShortcuts[0].shortcuts.forEach(async (shortcut) => {
+        if (shortcut.isRelativeToScrollItem && !scrollItem) {
+          return;
+        }
         const targetElement = (shortcut.isRelativeToScrollItem ? scrollItem : document).querySelector(shortcut.uniqueIdentifier) as HTMLElement;
-        if (targetElement && typeof targetElement.click === "function") {
+        console.log("targetElement", targetElement);
+        if (targetElement) {
           const isModifiers = {
             isControl: e.ctrlKey,
             isShift: e.shiftKey,
@@ -122,14 +147,52 @@ const PlasmoContent = () => {
               shortcut.isModifiers.isAlt === isModifiers.isAlt &&
               shortcut.isModifiers.isMeta === isModifiers.isMeta) {
             e.preventDefault();
-            targetElement.click();
+
+            const clickEvent = new MouseEvent("click", {
+                "view": window,
+                "bubbles": true,
+                "cancelable": false
+            });
+            targetElement.dispatchEvent(clickEvent);
+
+            const mouseDownEvent = new MouseEvent("mousedown", {
+                "view": window,
+                "bubbles": true,
+                "cancelable": false
+            });
+            targetElement.dispatchEvent(mouseDownEvent);
+
+						await	new Promise(resolve => setTimeout(resolve, 10));
+
+						const mouseUpEvent = new MouseEvent("mouseup", {
+								"view": window,
+								"bubbles": true,
+								"cancelable": false
+						});
+						targetElement.dispatchEvent(mouseUpEvent);
           }
         }
       });
+
+      handleBackups();
     }
 
     document.addEventListener("keydown", handleKeyDown)
-    return () => document.removeEventListener("keydown", handleKeyDown)
+
+    // Use MutationObeserver to watch for changes in the DOM and run backup function
+    const observer = new MutationObserver(() => {
+      console.log("DOM changed");
+      handleBackups();
+    });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+    // Cleanup
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown)
+      observer.disconnect();
+    }
   }, [scrollItem])
 
   return null
