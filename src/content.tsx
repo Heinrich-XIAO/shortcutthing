@@ -78,6 +78,24 @@ const PlasmoContent = () => {
 
   // Handle shortcuts
   useEffect(() => {
+		const isVisible = (element) => {
+			if (!element) return false;
+
+			// Check if the element is in the document
+			if (!document.body.contains(element)) return false;
+
+			// Traverse up the DOM to check visibility
+			let current = element;
+			while (current) {
+				const style = getComputedStyle(current);
+				if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+					return false;
+				}
+				current = current.parentElement;
+			}
+
+			return true;
+		};
     const setBackupScrollItemsWithCurrent = (currentItem: HTMLElement | null) => { 
       const backupScrollItems = [];
       backupScrollItems.push(currentItem.nextElementSibling as HTMLElement);
@@ -130,7 +148,9 @@ const PlasmoContent = () => {
         if (shortcut.isRelativeToScrollItem && !scrollItem) {
           return;
         }
-        const targetElement = (shortcut.isRelativeToScrollItem ? scrollItem : document).querySelector(shortcut.uniqueIdentifier) as HTMLElement;
+				const matchingElements = (shortcut.isRelativeToScrollItem ? scrollItem : document).querySelectorAll(shortcut.uniqueIdentifier);
+				const visibleElements = Array.from(matchingElements).filter(element => isVisible(element));
+				const targetElement = visibleElements[0] as HTMLElement;
         if (targetElement) {
           const isModifiers = {
             isControl: e.ctrlKey,
