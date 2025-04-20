@@ -1,16 +1,16 @@
 {
   "name": "shortcutthing",
-  "displayName": "Shortcutthing",
+  "displayName": "ShortcutThing",
   "version": "0.0.1",
   "description": " ",
   "author": " ",
   "scripts": {
     "dev": "plasmo dev",
-    "build": "plasmo build",
+    "build": "cross-env PARCEL_WORKER_BACKEND=process plasmo build",
     "package": "plasmo package"
   },
   "dependencies": {
-    "@clerk/chrome-extension": "^2.2.28",
+    "@clerk/chrome-extension": "^2.2.31",
     "@plasmohq/storage": "^1.15.0",
     "plasmo": "0.90.3",
     "react": "18.2.0",
@@ -23,6 +23,7 @@
     "@types/node": "20.11.5",
     "@types/react": "18.2.48",
     "@types/react-dom": "18.2.18",
+    "cross-env": "^7.0.3",
     "postcss": "8.4.33",
     "prettier": "3.2.4",
     "typescript": "5.3.3"
@@ -30,13 +31,8 @@
   "manifest": {
     "permissions": [
       "storage",
-      "activeTab",
-      "cookies"
+      "activeTab"
     ],
-    "key": "$CRX_PUBLIC_KEY",
-    "host_permissions": [
-      "http://localhost/*",
-      "$CLERK_FRONTEND_API/*"
-    ]
+    "host_permissions": []
   }
 }
