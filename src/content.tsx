@@ -131,7 +131,6 @@ const PlasmoContent = () => {
           return;
         }
         const targetElement = (shortcut.isRelativeToScrollItem ? scrollItem : document).querySelector(shortcut.uniqueIdentifier) as HTMLElement;
-        console.log("targetElement", targetElement);
         if (targetElement) {
           const isModifiers = {
             isControl: e.ctrlKey,
@@ -179,7 +178,6 @@ const PlasmoContent = () => {
 
     // Use MutationObserver to watch for changes in the DOM and run backup function
     const observer = new MutationObserver(() => {
-      console.log("DOM changed");
       handleBackups();
     });
     observer.observe(document.body, {
