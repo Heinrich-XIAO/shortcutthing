@@ -1,4 +1,3 @@
-import cssText from "data-text:~style.css"
 import type { PlasmoCSConfig } from "plasmo"
 import { useEffect, useState } from "react"
 import { Storage } from "@plasmohq/storage"
@@ -27,7 +26,6 @@ interface WebSubURLShortcut {
 }
 
 const getShortcutsFromUUID = async (uuid: string): Promise<WebSubURLShortcut[]> => {
-  // fetch from https://shortcutthingbackend.netlify.app/.netlify/functions/redisConnect with GET request and uuid as query parameter
   const res = await fetch(`https://shortcutthingbackend.netlify.app/.netlify/functions/redisConnect?uuid=${uuid}`, {
     method: "GET",
     headers: {
@@ -88,7 +86,7 @@ const PlasmoContent = () => {
     }
     const handleBackups = () => {
       if (scrollItem && !document.body.contains(scrollItem as Node)) {
-        // set to the first element in backups that is in the document
+        // Set to the first element in backups that is in the document
         const nextItem = backupScrollItems.find(item => document.body.contains(item as Node)) as HTMLElement;
         setScrollItem(nextItem);
         nextItem.style.border = "2px solid #555";
@@ -179,7 +177,7 @@ const PlasmoContent = () => {
 
     document.addEventListener("keydown", handleKeyDown)
 
-    // Use MutationObeserver to watch for changes in the DOM and run backup function
+    // Use MutationObserver to watch for changes in the DOM and run backup function
     const observer = new MutationObserver(() => {
       console.log("DOM changed");
       handleBackups();
