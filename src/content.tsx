@@ -16,6 +16,7 @@ interface Shortcut {
   key: string
   uniqueIdentifier: string
   isRelativeToScrollItem: boolean
+  mustBeVisible: boolean
 }
 
 interface WebSubURLShortcut {
@@ -149,8 +150,10 @@ const PlasmoContent = () => {
           return;
         }
 				const matchingElements = (shortcut.isRelativeToScrollItem ? scrollItem : document).querySelectorAll(shortcut.uniqueIdentifier);
-				const visibleElements = Array.from(matchingElements).filter(element => isVisible(element));
-				const targetElement = visibleElements[0] as HTMLElement;
+        console.log("matchingElements", matchingElements);
+        const visibleElements = Array.from(matchingElements).filter(element => isVisible(element));  
+        const targetElement = (shortcut.mustBeVisible ? visibleElements : matchingElements)[0] as HTMLElement;
+        console.log("targetElement", targetElement);
         if (targetElement) {
           const isModifiers = {
             isControl: e.ctrlKey,
