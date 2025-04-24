@@ -115,6 +115,17 @@ const PlasmoContent = () => {
       }
     }
     const handleKeyDown = async (e: KeyboardEvent) => {
+      // Empêcher l'exécution des raccourcis dans une zone de texte sauf si Ctrl, Alt ou Meta (Win) sont pressés (Shift seul ne compte pas)
+      const active = document.activeElement;
+      const isTextInput = active && (
+        active.tagName === "INPUT" ||
+        active.tagName === "TEXTAREA" ||
+        (active as HTMLElement).isContentEditable
+      );
+      const hasCtrlAltOrMeta = e.ctrlKey || e.altKey || e.metaKey;
+      if (isTextInput && !hasCtrlAltOrMeta) {
+        return;
+      }
       const shortcuts = await storage.get<WebSubURLShortcut[]>("shortcuts") || [];
       const isVimStyle = await storage.get<boolean>("vimStyle") || false;
       const currentURLShortcuts = shortcuts.filter(s => new RegExp(s.hrefRegex).test(window.location.href));

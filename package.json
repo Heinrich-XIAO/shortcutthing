@@ -30,8 +30,7 @@
   },
   "manifest": {
     "permissions": [
-      "storage",
-      "activeTab"
+      "storage"
     ]
   }
 }
