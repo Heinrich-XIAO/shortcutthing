@@ -59,7 +59,6 @@ const PlasmoContent = () => {
     setDefaultShortcuts();
   }, []);
 
-  // Sync shortcuts with server
   useEffect(() => {
     const syncShortcuts = async () => {
       const shortcuts = await storage.get<WebSubURLShortcut[]>("shortcuts") || [];
@@ -77,15 +76,12 @@ const PlasmoContent = () => {
     syncShortcuts();
   }, []);
 
-  // Handle shortcuts
   useEffect(() => {
 		const isVisible = (element) => {
 			if (!element) return false;
 
-			// Check if the element is in the document
 			if (!document.body.contains(element)) return false;
 
-			// Traverse up the DOM to check visibility
 			let current = element;
 			while (current) {
 				const style = getComputedStyle(current);
@@ -115,7 +111,6 @@ const PlasmoContent = () => {
       }
     }
     const handleKeyDown = async (e: KeyboardEvent) => {
-      // Empêcher l'exécution des raccourcis dans une zone de texte sauf si Ctrl, Alt ou Meta (Win) sont pressés (Shift seul ne compte pas)
       const active = document.activeElement;
       const isTextInput = active && (
         active.tagName === "INPUT" ||
@@ -148,7 +143,7 @@ const PlasmoContent = () => {
               setScrollItem(nextItem as HTMLElement);
               nextItem.scrollIntoView({ behavior: "auto", block: "nearest" });
               (nextItem as HTMLElement).style.border = "2px solid #555";
-              scrollItem.style.border = ""; // Reset border
+              scrollItem.style.border = "";
             }
           }
           setBackupScrollItemsWithCurrent(nextItem);
@@ -210,7 +205,6 @@ const PlasmoContent = () => {
 
     document.addEventListener("keydown", handleKeyDown)
 
-    // Use MutationObserver to watch for changes in the DOM and run backup function
     const observer = new MutationObserver(() => {
       handleBackups();
     });
@@ -218,7 +212,6 @@ const PlasmoContent = () => {
       childList: true,
       subtree: true
     });
-    // Cleanup
     return () => {
       document.removeEventListener("keydown", handleKeyDown)
       observer.disconnect();
