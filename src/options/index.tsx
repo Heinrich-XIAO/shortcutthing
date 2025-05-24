@@ -38,7 +38,7 @@ if (!PUBLISHABLE_KEY) {
 import "~style.css"
 
 function IndexOptions() {
-  const shortcuts = useState<WebSubURLShortcut[]>();
+  const [shortcuts, setShortcut] = useState<WebSubURLShortcut[]>();
 
   useEffect(() => {
     const thing = async () => {
@@ -49,7 +49,8 @@ function IndexOptions() {
             }
         });
         const body = await res.json();
-        console.log(body);
+        console.log(body.shortcuts)
+        setShortcut(body.shortcuts);
     };
     thing();
   }, [])
@@ -77,8 +78,53 @@ function IndexOptions() {
                 </SignedIn>
             </div>
         </header>
-        <main className="text-center">
-        </main>
+            <main className="text-center p-4">
+            {shortcuts === undefined ? (
+                <p className="text-gray-500">Loading shortcuts...</p>
+            ) : shortcuts.length === 0 ? (
+                <p className="text-gray-500">No shortcuts found.</p>
+            ) : (
+                <div className="space-y-6">
+                {shortcuts.map((entry) => (
+                    <div
+                    key={entry.uuid}
+                    className="border p-4 rounded-lg text-left bg-white shadow"
+                    >
+                    <h2 className="text-lg font-bold text-gray-800">
+                        Pattern: <span className="font-mono text-blue-600">{entry.hrefRegex}</span>
+                    </h2>
+                    <p className="text-sm text-gray-600 mb-2">
+                        Scroll Box: <code className="font-mono">{entry.scrollBoxIdentifier}</code>
+                    </p>
+                    <div className="space-y-2">
+                        {entry.shortcuts.map((s, i) => (
+                        <div
+                            key={i}
+                            className="border rounded px-3 py-2 bg-gray-50"
+                        >
+                            <p className="text-sm text-gray-800">
+                            <span className="font-semibold">Key:</span> <code className="font-mono">{s.key}</code>
+                            </p>
+                            <p className="text-sm text-gray-800">
+                            <span className="font-semibold">Modifiers:</span>{" "}
+                            {Object.entries(s.isModifiers)
+                                .filter(([, v]) => v)
+                                .map(([k]) => k.replace("is", ""))
+                                .join(" + ") || "None"}
+                            </p>
+                            <p className="text-sm text-gray-800">
+                            <span className="font-semibold">Visible:</span> {s.mustBeVisible ? "Yes" : "No"} |{" "}
+                            <span className="font-semibold">Relative to Scroll:</span> {s.isRelativeToScrollItem ? "Yes" : "No"}
+                            </p>
+                        </div>
+                        ))}
+                    </div>
+                    </div>
+                ))}
+                </div>
+            )}
+            </main>
+
     </div>
     </ClerkProvider>
   )
