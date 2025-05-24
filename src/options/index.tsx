@@ -5,6 +5,28 @@ import {
   SignedOut,
   UserButton,
 } from '@clerk/chrome-extension'
+import { useEffect, useState } from "react"
+import JSON5 from 'json5';
+
+interface Shortcut {
+    isModifiers: {
+        isControl: boolean
+        isShift: boolean
+        isAlt: boolean
+        isMeta: boolean
+    }
+    key: string
+    uniqueIdentifier: string
+    isRelativeToScrollItem: boolean
+    mustBeVisible: boolean
+}
+
+interface WebSubURLShortcut {
+    uuid: string
+    hrefRegex: string
+    shortcuts: Shortcut[]
+    scrollBoxIdentifier: string
+}
 
 const PUBLISHABLE_KEY = process.env.PLASMO_PUBLIC_CLERK_PUBLISHABLE_KEY
 const EXTENSION_URL = chrome.runtime.getURL('.')
@@ -16,6 +38,21 @@ if (!PUBLISHABLE_KEY) {
 import "~style.css"
 
 function IndexOptions() {
+  const shortcuts = useState<WebSubURLShortcut[]>();
+
+  useEffect(() => {
+    const thing = async () => {
+        const res = await fetch(`https://shortcutthingbackend.netlify.app/.netlify/functions/getShortcuts`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+        const body = await res.json();
+        console.log(body);
+    };
+    thing();
+  }, [])
   return (
     <ClerkProvider
       publishableKey={PUBLISHABLE_KEY}
